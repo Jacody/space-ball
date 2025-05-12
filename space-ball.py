@@ -8,11 +8,11 @@ import bot_logic
 # --- Konstanten ---
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
-FIELD_COLOR = (34, 139, 34)
+FIELD_COLOR = (0, 0, 0)  # Schwarz statt Grün
 LINE_COLOR = (255, 255, 255)
 TEXT_COLOR = (255, 255, 255)
-DEFAULT_P1_COLOR = (255, 0, 0) # Rot
-DEFAULT_P2_COLOR = (0, 0, 255) # Blau
+DEFAULT_P1_COLOR = (0, 255, 255)  # Türkis
+DEFAULT_P2_COLOR = (255, 192, 203)  # Rosa
 BALL_COLOR = (255, 255, 255)
 TRIBUNE_COLOR = (60, 60, 60)
 
@@ -44,8 +44,8 @@ RESET_DELAY = 1.5
 
 # --- Effekt Konstanten ---
 MAX_PARTICLES = 300
-BALL_TRAIL_LENGTH = 12
-BALL_TRAIL_MIN_SPEED = 150
+BALL_TRAIL_LENGTH = 15
+BALL_TRAIL_MIN_SPEED = 10
 
 # --- SPIELZUSTÄNDE ---
 STATE_MENU = "MENU"
@@ -582,8 +582,8 @@ while running:
 
 
     # Debugging-Ausgabe (optional, kann entfernt werden)
-    # ball_speed = ball.velocity.length()
-    # print(f"P1: ({int(player1.pos.x)}, {int(player1.pos.y)}) Angle: {int(player1.angle)} | P2: ({int(player2.pos.x)}, {int(player2.pos.y)}) Angle: {int(player2.angle)} || Ball: ({int(ball.pos.x)}, {int(ball.pos.y)}) Speed: {ball_speed:.1f} State: {game_state}")
+    #ball_speed = ball.velocity.length()
+    #print(f"P1: ({int(player1.pos.x)}, {int(player1.pos.y)}) Angle: {int(player1.angle)} | P2: ({int(player2.pos.x)}, {int(player2.pos.y)}) Angle: {int(player2.angle)} || Ball: ({int(ball.pos.x)}, {int(ball.pos.y)}) Speed: {ball_speed:.1f} State: {game_state}")
 
     pygame.display.flip()
 
