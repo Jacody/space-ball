@@ -16,9 +16,9 @@ This project is an interactive space game that uniquely combines modern technolo
 - Integration of Reinforcement Learning for AI opponents
 - Real-time game mechanics with precise controls
 
-<img src="https://github.com/user-attachments/assets/dbe4abf4-5a49-4b9c-99e7-39613f4cfbcb" alt="Game View 1" width="500">
+<img src="https://github.com/user-attachments/assets/dbe4abf4-5a49-4b9c-99e7-39613f4cfbcb" alt="Game View 1" width="400">
 
-<img src="https://github.com/user-attachments/assets/cf2b5453-7bc7-4d67-b7ef-3c292bff5084" alt="Game View 2" width="500">
+<img src="https://github.com/user-attachments/assets/cf2b5453-7bc7-4d67-b7ef-3c292bff5084" alt="Game View 2" width="400">
 
 ## System Requirements
 
@@ -75,16 +75,9 @@ This project is an interactive space game that uniquely combines modern technolo
 
 ## Controls
 
-- **Hand Gesture Recognition**: Show your open hand to the camera to control your spaceship
-- **Movement**: Move your hand in the direction you want your spaceship to move
-- **Shooting**: Close your hand into a fist to shoot
-
-## Troubleshooting
-
-If you experience issues with hand gesture recognition:
-- Make sure your webcam is properly connected
-- Improve the lighting in your room
-- Keep your hand clearly visible to the camera
+- **Rotation**: Show your open hand to the camera to rotate the spaceship
+- **Forward Movement**: Make a fist to propel your spaceship forward
+- **Direction Control**: The position of your hand determines the direction of movement
 
 ## License
 
