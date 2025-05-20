@@ -1,93 +1,91 @@
 # Space Game
 
-Ein innovatives Weltraumspiel mit Handgestenerkennung und KI-gesteuerten Gegnern.
+An innovative space game that combines hand gesture control with AI-powered opponents.
 
-## Projektbeschreibung
+## Project Description
 
-Dieses Projekt ist ein interaktives Weltraumspiel, das moderne Technologien auf einzigartige Weise kombiniert:
+This project is an interactive space game that uniquely combines modern technologies:
 
-- **Handgestenerkennung**: Steuere dein Raumschiff durch intuitive Handbewegungen
-- **KI-Gegner**: Tritt gegen einen mit Reinforcement Learning trainierten KI-Gegner an
-- **Echtzeit-Interaktion**: Dynamisches Spielerlebnis mit sofortiger Reaktion auf deine Bewegungen
+- **Hand Gesture Control**: Control your spaceship through intuitive hand movements
+- **AI Opponent**: Compete against a reinforcement learning-trained AI opponent
+- **Real-time Interaction**: Dynamic gameplay with immediate response to your movements
 
-## Technische Highlights
+## Technical Highlights
 
-- Implementierung von Computer Vision für die Handgestenerkennung
-- Integration von Reinforcement Learning für KI-Gegner
-- Echtzeit-Spielmechanik mit präziser Steuerung
+- Implementation of Computer Vision for hand gesture recognition
+- Integration of Reinforcement Learning for AI opponents
+- Real-time game mechanics with precise controls
 
-## Systemvoraussetzungen
+![Game View 1](https://github.com/user-attachments/assets/dbe4abf4-5a49-4b9c-99e7-39613f4cfbcb)
 
-- Python 3.8 oder höher
-- Webcam für die Handgestenerkennung
-- Mindestens 4GB RAM
-- GPU wird für optimale Leistung empfohlen
+![Game View 2](https://github.com/user-attachments/assets/cf2b5453-7bc7-4d67-b7ef-3c292bff5084)
+
+## System Requirements
+
+- Python 3.8 or higher
+- Webcam for hand gesture recognition
+- Minimum 4GB RAM
+- GPU recommended for optimal performance
 
 ## Installation
 
-1. Repository klonen:
+1. Clone the repository:
    ```
    git clone https://github.com/username/space-game.git
    cd space-game
    ```
 
-2. Virtuelle Umgebung erstellen und aktivieren (empfohlen):
+2. Create and activate a virtual environment (recommended):
    ```
    python -m venv venv
    
-   # Unter Windows:
+   # On Windows:
    venv\Scripts\activate
    
-   # Unter macOS/Linux:
+   # On macOS/Linux:
    source venv/bin/activate
    ```
 
-3. Abhängigkeiten installieren:
+3. Install dependencies:
    ```
    pip install -r requirements.txt
    ```
 
-## Verwendung
+## Usage
 
-1. Einzelspieler-Modus mit Handgestenerkennung starten:
+1. Start single-player mode with hand gesture control:
    ```
    python single_player_camera_control.py
    ```
 
-2. Zweispieler-Modus mit Handgestenerkennung starten:
+2. Start two-player mode with hand gesture control:
    ```
    python 2_player_camera_control.py
    ```
 
-3. Spiel gegen KI-Gegner starten:
+3. Play against an AI opponent:
    ```
    python play_trained_agent.py
    ```
 
-4. Eigenen KI-Agenten trainieren:
+4. Train your own AI agent:
    ```
    python train_agent.py
    ```
 
-## Steuerung
+## Controls
 
-- **Handgestenerkennung**: Zeige deine offene Hand in die Kamera, um dein Raumschiff zu steuern
-- **Bewegung**: Bewege deine Hand in die Richtung, in die sich dein Raumschiff bewegen soll
-- **Schießen**: Schließe deine Hand zur Faust, um zu schießen
+- **Hand Gesture Recognition**: Show your open hand to the camera to control your spaceship
+- **Movement**: Move your hand in the direction you want your spaceship to move
+- **Shooting**: Close your hand into a fist to shoot
 
-## Screenshots
+## Troubleshooting
 
-![Spielansicht 1](https://github.com/user-attachments/assets/dbe4abf4-5a49-4b9c-99e7-39613f4cfbcb)
+If you experience issues with hand gesture recognition:
+- Make sure your webcam is properly connected
+- Improve the lighting in your room
+- Keep your hand clearly visible to the camera
 
-![Spielansicht 2](https://github.com/user-attachments/assets/cf2b5453-7bc7-4d67-b7ef-3c292bff5084)
+## License
 
-## Fehlerbehebung
-
-Sollten Probleme mit der Handgestenerkennung auftreten:
-- Stelle sicher, dass deine Webcam korrekt angeschlossen ist
-- Verbessere die Beleuchtung in deinem Raum
-- Halte deine Hand deutlich sichtbar vor die Kamera
-
-## Lizenz
-
-MIT-Lizenz - Siehe LICENSE-Datei für Details.
+MIT License - See LICENSE file for details.
