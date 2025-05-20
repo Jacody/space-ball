@@ -10,15 +10,16 @@ This project is an interactive space game that uniquely combines modern technolo
 - **AI Opponent**: Compete against a reinforcement learning-trained AI opponent
 - **Real-time Interaction**: Dynamic gameplay with immediate response to your movements
 
+<div style="display: flex; justify-content: space-between;">
+  <img src="https://github.com/user-attachments/assets/dbe4abf4-5a49-4b9c-99e7-39613f4cfbcb" alt="Game View 1" width="350">
+  <img src="https://github.com/user-attachments/assets/cf2b5453-7bc7-4d67-b7ef-3c292bff5084" alt="Game View 2" width="350">
+</div>
+
 ## Technical Highlights
 
 - Implementation of Computer Vision for hand gesture recognition
 - Integration of Reinforcement Learning for AI opponents
 - Real-time game mechanics with precise controls
-
-<img src="https://github.com/user-attachments/assets/dbe4abf4-5a49-4b9c-99e7-39613f4cfbcb" alt="Game View 1" width="400">
-
-<img src="https://github.com/user-attachments/assets/cf2b5453-7bc7-4d67-b7ef-3c292bff5084" alt="Game View 2" width="400">
 
 ## System Requirements
 
