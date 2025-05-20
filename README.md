@@ -2,6 +2,11 @@
 
 An innovative space game that combines hand gesture control with AI-powered opponents.
 
+<div style="display: flex; justify-content: space-between;">
+  <img src="https://github.com/user-attachments/assets/dbe4abf4-5a49-4b9c-99e7-39613f4cfbcb" alt="Game View 1" width="350">
+  <img src="https://github.com/user-attachments/assets/cf2b5453-7bc7-4d67-b7ef-3c292bff5084" alt="Game View 2" width="380">
+</div>
+
 ## Project Description
 
 This project is an interactive space game that uniquely combines modern technologies:
@@ -9,11 +14,6 @@ This project is an interactive space game that uniquely combines modern technolo
 - **Hand Gesture Control**: Control your spaceship through intuitive hand movements
 - **AI Opponent**: Compete against a reinforcement learning-trained AI opponent
 - **Real-time Interaction**: Dynamic gameplay with immediate response to your movements
-
-<div style="display: flex; justify-content: space-between;">
-  <img src="https://github.com/user-attachments/assets/dbe4abf4-5a49-4b9c-99e7-39613f4cfbcb" alt="Game View 1" width="350">
-  <img src="https://github.com/user-attachments/assets/cf2b5453-7bc7-4d67-b7ef-3c292bff5084" alt="Game View 2" width="350">
-</div>
 
 ## Technical Highlights
 
