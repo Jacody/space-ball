@@ -16,9 +16,9 @@ This project is an interactive space game that uniquely combines modern technolo
 - Integration of Reinforcement Learning for AI opponents
 - Real-time game mechanics with precise controls
 
-![Game View 1](https://github.com/user-attachments/assets/dbe4abf4-5a49-4b9c-99e7-39613f4cfbcb)
+<img src="https://github.com/user-attachments/assets/dbe4abf4-5a49-4b9c-99e7-39613f4cfbcb" alt="Game View 1" width="500">
 
-![Game View 2](https://github.com/user-attachments/assets/cf2b5453-7bc7-4d67-b7ef-3c292bff5084)
+<img src="https://github.com/user-attachments/assets/cf2b5453-7bc7-4d67-b7ef-3c292bff5084" alt="Game View 2" width="500">
 
 ## System Requirements
 
