@@ -75,9 +75,7 @@ This project is an interactive space game that uniquely combines modern technolo
 
 ## Controls
 
-- **Rotation**: Show your open hand to the camera to rotate the spaceship
 - **Forward Movement**: Make a fist to propel your spaceship forward
-- **Direction Control**: The position of your hand determines the direction of movement
 
 ## License
 
