@@ -3,6 +3,13 @@ import math
 import sys
 import time
 import random
+import os
+
+# Pfad zum ai-Verzeichnis hinzufügen
+current_dir = os.path.dirname(os.path.abspath(__file__))
+ai_dir = os.path.join(os.path.dirname(current_dir), 'ai')
+sys.path.insert(0, ai_dir)
+
 import bot_logic
 
 # --- Konstanten ---
