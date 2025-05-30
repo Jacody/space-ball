@@ -21,6 +21,36 @@ This project is an interactive space game that uniquely combines modern technolo
 - Integration of Reinforcement Learning for AI opponents
 - Real-time game mechanics with precise controls
 
+## Game logic (only one signal, stand 0 or sprint 1)
+   0 player rotates in right direction when you dont move
+   1 when you move sprint forward without rotating
+
+## Bot logic
+   switches every 10 seconds between attack and defense mode
+   defense mode: go between ball and goal line
+   attack mode: shoot the ball
+
+## AI Parameters (trains against bot)
+
+- Rewards: 
+   +1 for shooting ball in direction of opponent's goal line 
+   +100 for goal scored
+   -100 for goal conceded
+
+- Actions:
+   0 for stand and turn
+   1 for run 
+
+- States:
+   position player
+   direction player
+
+   position ball 
+   speed ball
+   direction ball 
+
+   position opponent
+
 ## System Requirements
 
 - Python 3.8 or higher
