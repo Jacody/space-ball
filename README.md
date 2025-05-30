@@ -37,19 +37,19 @@ Rewards:
    - +100 for goal scored
    - -100 for goal conceded
 
-- Actions:
-   0 for stand and turn
-   1 for run 
+Actions:
+   - 0 for stand and turn
+   - 1 for run 
 
-- States:
-   position player
-   direction player
+States:
+   - position player
+   - direction player
 
-   position ball 
-   speed ball
-   direction ball 
+   - position ball 
+   - speed ball
+   - direction ball 
 
-   position opponent
+   - position opponent
 
 ## System Requirements
 
