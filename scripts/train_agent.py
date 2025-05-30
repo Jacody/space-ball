@@ -1,4 +1,12 @@
 import os
+import sys
+
+# Pfad zur src/ai hinzufügen
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)
+ai_dir = os.path.join(project_root, 'src', 'ai')
+sys.path.insert(0, ai_dir)
+
 from stable_baselines3 import PPO, A2C, DQN # Wähle einen Algorithmus
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.callbacks import CheckpointCallback

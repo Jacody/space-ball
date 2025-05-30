@@ -2,19 +2,42 @@ import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
 import pygame # Für Konstanten und ggf. interne Spielinstanz
+import sys
+import os
+import importlib.util
 
 # Importiere dein Spiel oder die relevanten Teile
 # Du musst main_game.py so anpassen, dass es als Modul importiert werden kann
 # und eine Klasse oder Funktionen bereitstellt, um das Spiel zu steuern/abzufragen.
 # Beispiel: from main_game import SoccerGameInstance, PLAYER_RADIUS, BALL_RADIUS etc.
 # Für dieses Beispiel tue ich so, als gäbe es eine solche Klasse:
-from main_game import (
-    Player, Ball, SCREEN_WIDTH, SCREEN_HEIGHT, TRIBUNE_HEIGHT,
-    PLAYER_RADIUS, BALL_RADIUS, GOAL_WIDTH, GOAL_HEIGHT,
-    DEFAULT_P1_COLOR, DEFAULT_P2_COLOR,
-    Particle, emit_particles, update_and_draw_particles, particles, # Wenn Partikel Teil des States/Rewards sind
-    # ... und andere relevante Konstanten/Funktionen
-)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+core_dir = os.path.join(os.path.dirname(current_dir), 'core')
+sys.path.insert(0, core_dir)
+
+# Import des space-ball Moduls mit importlib wegen Bindestrich im Namen
+space_ball_path = os.path.join(core_dir, 'space-ball.py')
+spec = importlib.util.spec_from_file_location("space_ball", space_ball_path)
+space_ball = importlib.util.module_from_spec(spec)
+sys.modules["space_ball"] = space_ball
+spec.loader.exec_module(space_ball)
+
+# Import der Spiel-Komponenten
+Player = space_ball.Player
+Ball = space_ball.Ball
+SCREEN_WIDTH = space_ball.SCREEN_WIDTH
+SCREEN_HEIGHT = space_ball.SCREEN_HEIGHT
+TRIBUNE_HEIGHT = space_ball.TRIBUNE_HEIGHT
+PLAYER_RADIUS = space_ball.PLAYER_RADIUS
+BALL_RADIUS = space_ball.BALL_RADIUS
+GOAL_WIDTH = space_ball.GOAL_WIDTH
+GOAL_HEIGHT = space_ball.GOAL_HEIGHT
+DEFAULT_P1_COLOR = space_ball.DEFAULT_P1_COLOR
+DEFAULT_P2_COLOR = space_ball.DEFAULT_P2_COLOR
+Particle = space_ball.Particle
+emit_particles = space_ball.emit_particles
+update_and_draw_particles = space_ball.update_and_draw_particles
+particles = space_ball.particles
 
 # --- Konstanten für RL ---
 # Definiere die Aktionen, die der Agent ausführen kann

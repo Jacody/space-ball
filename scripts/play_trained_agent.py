@@ -1,4 +1,13 @@
 import time
+import sys
+import os
+
+# Pfad zur src/ai hinzufügen
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)
+ai_dir = os.path.join(project_root, 'src', 'ai')
+sys.path.insert(0, ai_dir)
+
 from stable_baselines3 import PPO # oder den Algorithmus, den du trainiert hast
 from rl_env import SoccerEnv
 import os
