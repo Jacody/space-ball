@@ -32,10 +32,10 @@ This project is an interactive space game that uniquely combines modern technolo
 
 ## AI Parameters (trains against bot)
 
-- Rewards: 
-   +1 for shooting ball in direction of opponent's goal line 
-   +100 for goal scored
-   -100 for goal conceded
+Rewards: 
+   - +1 for shooting ball in direction of opponent's goal line 
+   - +100 for goal scored
+   - -100 for goal conceded
 
 - Actions:
    0 for stand and turn
