@@ -46,7 +46,7 @@ SPECTATOR_COLORS = [
 ]
 
 FPS = 60
-GAME_DURATION = 120
+GAME_DURATION = 60
 RESET_DELAY = 1.5
 
 # --- Effekt Konstanten ---
