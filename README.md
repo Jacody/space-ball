@@ -22,13 +22,13 @@ This project is an interactive space game that uniquely combines modern technolo
 - Real-time game mechanics with precise controls
 
 ## Game logic (only one signal, stand 0 or sprint 1)
-   0 player rotates in right direction when you dont move
-   1 when you move sprint forward without rotating
+   - 0 player rotates in right direction when you dont move
+   - 1 when you move sprint forward without rotating
 
 ## Bot logic
-   switches every 10 seconds between attack and defense mode
-   defense mode: go between ball and goal line
-   attack mode: shoot the ball
+   - switches every 10 seconds between attack and defense mode
+   - defense mode: go between ball and goal line
+   - attack mode: shoot the ball
 
 ## AI Parameters (trains against bot)
 
