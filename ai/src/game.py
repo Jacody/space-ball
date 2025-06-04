@@ -409,12 +409,12 @@ while running:
             ball_direction = math.degrees(math.atan2(ball.velocity.y, ball.velocity.x))
         
         print(f"RUNDE {round_number} | Zeit: {int(remaining_time//60):02}:{int(remaining_time%60):02} | Score: {score1}:{score2}")
-        print(f"Position Player Left: ({player1.pos.x:.1f}, {player1.pos.y:.1f})")
-        print(f"Direction Player Left: {player1.angle:.1f}°")
+        print(f"Position Player Right: ({player2.pos.x:.1f}, {player2.pos.y:.1f})")
+        print(f"Direction Player Right: {player2.angle:.1f}°")
         print(f"Position Ball: ({ball.pos.x:.1f}, {ball.pos.y:.1f})")
         print(f"Speed Ball: {ball_speed:.1f}")
         print(f"Direction Ball: {ball_direction:.1f}°")
-        print(f"Position Player Right: ({player2.pos.x:.1f}, {player2.pos.y:.1f})")
+        print(f"Position Player Left: ({player1.pos.x:.1f}, {player1.pos.y:.1f})")
         print(f"Current Reward: {current_reward}")
         print(f"Total Reward: {total_reward}")
         
