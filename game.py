@@ -285,20 +285,6 @@ while running:
                 if not PLAYER2_IS_BOT and event.key == player2.control_key: player2.stop_sprint()
 
     if game_state == STATE_PLAYING:
-        # Terminal-Ausgabe der Spielwerte
-        ball_speed = ball.velocity.length()
-        ball_direction = 0
-        if ball_speed > 0:
-            ball_direction = math.degrees(math.atan2(ball.velocity.y, ball.velocity.x))
-        
-        print(f"Position Player Left: ({player1.pos.x:.1f}, {player1.pos.y:.1f})")
-        print(f"Direction Player Left: {player1.angle:.1f}°")
-        print(f"Position Ball: ({ball.pos.x:.1f}, {ball.pos.y:.1f})")
-        print(f"Speed Ball: {ball_speed:.1f}")
-        print(f"Direction Ball: {ball_direction:.1f}°")
-        print(f"Position Player Right: ({player2.pos.x:.1f}, {player2.pos.y:.1f})")
-        print("-" * 50)
-        
         # Bot-Logik für Player1 (bot_left)
         if PLAYER1_IS_BOT:
              target_goal_x = SCREEN_WIDTH - GOAL_WIDTH  # Rechtes Tor für Player1 (bot_left)
