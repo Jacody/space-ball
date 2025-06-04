@@ -10,7 +10,8 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = os.path.dirname(os.path.dirname(current_dir))
 sys.path.insert(0, root_dir)
 
-import bot_logic as bot_logic
+import bot_left
+import bot_right as bot_right
 import visuals
 
 # reset 
@@ -52,6 +53,7 @@ STATE_GOAL_PAUSE = "GOAL_PAUSE"
 STATE_GAME_OVER = "GAME_OVER"
 
 # --- Bot Konfiguration ---
+PLAYER1_IS_BOT = False
 PLAYER2_IS_BOT = False
 PLAYER2_IS_AI_AGENT = False  # Neue Option für RL-Agent
 
@@ -234,8 +236,10 @@ def start_new_game():
     global score1, score2, start_time, remaining_time, last_goal_time, game_state
     score1 = 0; score2 = 0; start_time = time.time(); remaining_time = GAME_DURATION; last_goal_time = 0
     reset_positions()
+    if PLAYER1_IS_BOT:
+        bot_left.reset_bot_state()
     if PLAYER2_IS_BOT:
-        bot_logic.reset_bot_state()
+        bot_right.reset_bot_state()
     # Sicherstellen, dass nach Spielstart der Zustand auf PLAYING ist
     game_state = STATE_PLAYING
 
@@ -254,29 +258,49 @@ while running:
 
             if game_state == STATE_MENU:
                 if event.key == pygame.K_1: 
+                    PLAYER1_IS_BOT = False
                     PLAYER2_IS_BOT = False; 
                     start_new_game(); 
                     # game_state = STATE_PLAYING # Wird in start_new_game gesetzt
                     pygame.display.set_caption("Soccer - PvP")
                 elif event.key == pygame.K_2: 
+                    PLAYER1_IS_BOT = False
                     PLAYER2_IS_BOT = True; 
                     start_new_game(); 
                     # game_state = STATE_PLAYING # Wird in start_new_game gesetzt
                     pygame.display.set_caption("Soccer - PvE")
+                elif event.key == pygame.K_3:
+                    PLAYER1_IS_BOT = True
+                    PLAYER2_IS_BOT = True
+                    start_new_game()
+                    pygame.display.set_caption("Soccer - Bot vs Bot")
 
             elif game_state == STATE_PLAYING:
-                if event.key == player1.control_key: player1.start_sprint()
+                if event.key == player1.control_key and not PLAYER1_IS_BOT: player1.start_sprint()
                 if not PLAYER2_IS_BOT and event.key == player2.control_key: player2.start_sprint()
 
         if event.type == pygame.KEYUP:
             if game_state == STATE_PLAYING:
-                if event.key == player1.control_key: player1.stop_sprint()
+                if event.key == player1.control_key and not PLAYER1_IS_BOT: player1.stop_sprint()
                 if not PLAYER2_IS_BOT and event.key == player2.control_key: player2.stop_sprint()
 
     if game_state == STATE_PLAYING:
+        # Bot-Logik für Player1 (bot_left)
+        if PLAYER1_IS_BOT:
+             target_goal_x = SCREEN_WIDTH - GOAL_WIDTH  # Rechtes Tor für Player1 (bot_left)
+             should_sprint = bot_left.get_bot_decision(
+                 player1, ball, target_goal_x,
+                 SCREEN_WIDTH, SCREEN_HEIGHT, PLAYER_RADIUS, BALL_RADIUS,
+                 TRIBUNE_HEIGHT,
+                 dt
+             )
+             if should_sprint and not player1.is_sprinting: player1.start_sprint()
+             elif not should_sprint and player1.is_sprinting: player1.stop_sprint()
+
+        # Bot-Logik für Player2 (bot_right)
         if PLAYER2_IS_BOT:
-             target_goal_x = SCREEN_WIDTH - GOAL_WIDTH
-             should_sprint = bot_logic.get_bot_decision(
+             target_goal_x = 0  # Linkes Tor für Player2 (bot_right)
+             should_sprint = bot_right.get_bot_decision(
                  player2, ball, target_goal_x,
                  SCREEN_WIDTH, SCREEN_HEIGHT, PLAYER_RADIUS, BALL_RADIUS,
                  TRIBUNE_HEIGHT,
@@ -387,6 +411,7 @@ while running:
         visuals.draw_text(screen, "Wähle den Modus:", menu_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 100)
         visuals.draw_text(screen, "1 : Spieler vs Spieler", main_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
         visuals.draw_text(screen, "2 : Spieler vs Bot", main_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 100)
+        visuals.draw_text(screen, "3 : Bot vs Bot", main_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 200)
         visuals.draw_text(screen, "ESC: Quit | R: Menu", small_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT - 50)
 
     elif game_state in [STATE_PLAYING, STATE_GOAL_PAUSE, STATE_GAME_OVER]:
@@ -406,9 +431,18 @@ while running:
              visuals.draw_text(screen, "GOAL!", menu_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
         elif game_state == STATE_GAME_OVER:
              winner_text = ""
-             if score1 > score2: winner_text = f"Player 1 wins!"
-             elif score2 > score1: winner_text = f"Player 2 wins!"
-             else: winner_text = "Draw!"
+             if score1 > score2: 
+                 if PLAYER1_IS_BOT and PLAYER2_IS_BOT:
+                     winner_text = f"Bot Left gewinnt!"
+                 else:
+                     winner_text = f"Player 1 wins!"
+             elif score2 > score1: 
+                 if PLAYER1_IS_BOT and PLAYER2_IS_BOT:
+                     winner_text = f"Bot Right gewinnt!"
+                 else:
+                     winner_text = f"Player 2 wins!"
+             else: 
+                 winner_text = "Unentschieden!"
              visuals.draw_text(screen, "Game Over", menu_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 60)
              visuals.draw_text(screen, winner_text, main_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 10)
              visuals.draw_text(screen, "Press R for Main Menu", small_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 40)

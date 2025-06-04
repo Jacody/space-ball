@@ -74,12 +74,12 @@ def get_bot_decision(bot_player, ball, opponent_goal_line_x,
         if _bot_mode_timer >= BOT_DEFENSE_DURATION: # Zeit für Defense abgelaufen?
             _bot_current_mode = "ATTACK"
             _bot_mode_timer = 0.0
-            print(f"BOT LOGIC: Wechsel zu ATTACK Modus (Zeit: {time.time():.1f})")
+            print(f"BOT RIGHT: Wechsel zu ATTACK Modus (Zeit: {time.time():.1f})")
     elif _bot_current_mode == "ATTACK": # Bot ist im Attack Modus
         if _bot_mode_timer >= BOT_ATTACK_DURATION: # Zeit für Attack abgelaufen?
             _bot_current_mode = "DEFENSE"
             _bot_mode_timer = 0.0
-            print(f"BOT LOGIC: Wechsel zu DEFENSE Modus (Zeit: {time.time():.1f})")
+            print(f"BOT RIGHT: Wechsel zu DEFENSE Modus (Zeit: {time.time():.1f})")
 
     target_pos = pygame.Vector2(0,0)
     current_angle_tolerance = BOT_GOTO_ANGLE_TOLERANCE
@@ -145,4 +145,4 @@ def reset_bot_state():
     global _bot_current_mode, _bot_mode_timer
     _bot_current_mode = "ATTACK"  # <<<<<<< HIER AUCH ÄNDERN: Reset setzt jetzt in ATTACK Modus zurück
     _bot_mode_timer = 0.0
-    print("BOT LOGIC: Interner Zustand auf ATTACK zurückgesetzt.")
+    print("BOT RIGHT: Interner Zustand auf ATTACK zurückgesetzt.")
