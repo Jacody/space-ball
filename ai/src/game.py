@@ -61,7 +61,7 @@ PLAYER2_IS_AI_AGENT = False  # Neue Option für RL-Agent
 current_reward = 0
 total_reward = 0
 previous_ball_x = 0
-player1_touched_ball = False
+player2_touched_ball = False  # Jetzt für player2 (rechter Spieler)
 last_direction_reward_time = 0  # Timer für 3-Sekunden-Cooldown
 
 # --- Klassen (Player, Ball) ---
@@ -240,38 +240,38 @@ def reset_positions():
     visuals.clear_particles()
 
 def calculate_ball_direction_reward():
-    """Berechnet Reward basierend auf Ball-Richtung zum gegnerischen Tor (rechts für player left)"""
-    global previous_ball_x, player1_touched_ball, last_direction_reward_time
+    """Berechnet Reward basierend auf Ball-Richtung zum gegnerischen Tor (links für player right)"""
+    global previous_ball_x, player2_touched_ball, last_direction_reward_time
     
     current_time = time.time()
     
-    # Ball bewegt sich nach rechts (Richtung gegnerisches Tor für player left)
-    ball_moving_right = ball.pos.x > previous_ball_x
+    # Ball bewegt sich nach links (Richtung gegnerisches Tor für player right)
+    ball_moving_left = ball.pos.x < previous_ball_x
     previous_ball_x = ball.pos.x
     
-    # Nur Reward geben wenn player1 den Ball berührt hat, Ball sich nach rechts bewegt 
+    # Nur Reward geben wenn player2 den Ball berührt hat, Ball sich nach links bewegt 
     # UND mindestens 3 Sekunden seit dem letzten Reward vergangen sind
-    if (player1_touched_ball and ball_moving_right and ball.velocity.length() > 0 
+    if (player2_touched_ball and ball_moving_left and ball.velocity.length() > 0 
         and current_time - last_direction_reward_time >= 3.0):
-        player1_touched_ball = False  # Reset nach Reward
+        player2_touched_ball = False  # Reset nach Reward
         last_direction_reward_time = current_time  # Timer zurücksetzen
         return 1
     
-    # Reset wenn Ball sich nicht nach rechts bewegt
-    if not ball_moving_right:
-        player1_touched_ball = False
+    # Reset wenn Ball sich nicht nach links bewegt
+    if not ball_moving_left:
+        player2_touched_ball = False
         
     return 0
 
 def handle_ball_collision():
-    """Behandelt Ball-Spieler-Kollisionen und setzt player1_touched_ball Flag"""
-    global player1_touched_ball
+    """Behandelt Ball-Spieler-Kollisionen und setzt player2_touched_ball Flag"""
+    global player2_touched_ball
     
     collided_players = pygame.sprite.spritecollide(ball, players, False, pygame.sprite.collide_circle)
     for player in collided_players:
-        # Verfolge wenn player1 den Ball berührt
-        if player == player1:
-            player1_touched_ball = True
+        # Verfolge wenn player2 den Ball berührt
+        if player == player2:
+            player2_touched_ball = True
             
         distance_vec = ball.pos - player.pos; distance = distance_vec.length()
         if distance == 0: collision_normal = pygame.Vector2(1, 0)
@@ -302,9 +302,9 @@ def handle_ball_collision():
              player.rect.center = player.pos
 
 def start_new_game():
-    global score1, score2, start_time, remaining_time, last_goal_time, game_state, current_reward, total_reward, previous_ball_x, player1_touched_ball, last_direction_reward_time
+    global score1, score2, start_time, remaining_time, last_goal_time, game_state, current_reward, total_reward, previous_ball_x, player2_touched_ball, last_direction_reward_time
     score1 = 0; score2 = 0; start_time = time.time(); remaining_time = GAME_DURATION; last_goal_time = 0
-    current_reward = 0; total_reward = 0; previous_ball_x = SCREEN_WIDTH / 2; player1_touched_ball = False; last_direction_reward_time = 0
+    current_reward = 0; total_reward = 0; previous_ball_x = SCREEN_WIDTH / 2; player2_touched_ball = False; last_direction_reward_time = 0
     reset_positions()
     if PLAYER1_IS_BOT:
         bot_left.reset_bot_state()
@@ -434,17 +434,17 @@ while running:
         if ball.rect.right < GOAL_WIDTH and goal_y_abs_start < ball.pos.y < goal_y_abs_end:
             score2 += 1; goal_scored = True; print("Goal for Blue!")
             goal_scorer_color = player2.color
-            # Gegentor für player left = -100 Reward
-            current_reward = -100
-            total_reward += current_reward
-            print(f"GEGENTOR! Reward: {current_reward}, Total Reward: {total_reward}")
-        elif ball.rect.left > SCREEN_WIDTH - GOAL_WIDTH and goal_y_abs_start < ball.pos.y < goal_y_abs_end:
-            score1 += 1; goal_scored = True; print("Goal for Red!")
-            goal_scorer_color = player1.color
-            # Tor für player left = +100 Reward
+            # Tor für player right (linkes Tor) = +100 Reward
             current_reward = 100
             total_reward += current_reward
             print(f"TOR! Reward: {current_reward}, Total Reward: {total_reward}")
+        elif ball.rect.left > SCREEN_WIDTH - GOAL_WIDTH and goal_y_abs_start < ball.pos.y < goal_y_abs_end:
+            score1 += 1; goal_scored = True; print("Goal for Red!")
+            goal_scorer_color = player1.color
+            # Gegentor für player right (rechtes Tor) = -100 Reward
+            current_reward = -100
+            total_reward += current_reward
+            print(f"GEGENTOR! Reward: {current_reward}, Total Reward: {total_reward}")
 
         if goal_scored:
             game_state = STATE_GOAL_PAUSE; last_goal_time = time.time()
