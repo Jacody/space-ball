@@ -5,12 +5,16 @@ import time
 import random
 import os
 
-# Pfad zum ai-Verzeichnis hinzufügen
+# Pfad zum Hauptverzeichnis hinzufügen
 current_dir = os.path.dirname(os.path.abspath(__file__))
-ai_dir = os.path.join(os.path.dirname(current_dir), 'ai')
-sys.path.insert(0, ai_dir)
+root_dir = os.path.dirname(os.path.dirname(current_dir))
+sys.path.insert(0, root_dir)
 
-import bot_logic
+import bot_logic as bot_logic
+
+
+
+
 
 # --- Konstanten ---
 SCREEN_WIDTH = 800
