@@ -11,21 +11,19 @@ root_dir = os.path.dirname(os.path.dirname(current_dir))
 sys.path.insert(0, root_dir)
 
 import bot_logic as bot_logic
+import visuals
 
-
-
-
+# reset 
+# reward
+# play(action) -> direction
+# game_iteration
+# is_collision
 
 # --- Konstanten ---
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
-FIELD_COLOR = (0, 0, 0)  # Schwarz statt Grün
-LINE_COLOR = (255, 255, 255)
-TEXT_COLOR = (255, 255, 255)
 DEFAULT_P1_COLOR = (0, 255, 255)  # Türkis
 DEFAULT_P2_COLOR = (255, 192, 203)  # Rosa
-BALL_COLOR = (255, 255, 255)
-TRIBUNE_COLOR = (60, 60, 60)
 
 # --- Einstellbare Parameter (jetzt feste Standardwerte) ---
 PLAYER_RADIUS = 15
@@ -42,21 +40,10 @@ GOAL_WIDTH = 10
 
 TRIBUNE_HEIGHT = 50
 NUM_SPECTATORS = 200
-SPECTATOR_RADIUS = 3
-SPECTATOR_COLORS = [
-    (200, 0, 0), (0, 0, 200), (200, 200, 0), (0, 200, 0),
-    (200, 100, 0), (150, 0, 150), (100, 100, 100), (255, 150, 150),
-    (150, 150, 255), (255, 255, 150)
-]
 
 FPS = 60
 GAME_DURATION = 60
 RESET_DELAY = 1.5
-
-# --- Effekt Konstanten ---
-MAX_PARTICLES = 300
-BALL_TRAIL_LENGTH = 15
-BALL_TRAIL_MIN_SPEED = 10
 
 # --- SPIELZUSTÄNDE ---
 STATE_MENU = "MENU"
@@ -67,59 +54,6 @@ STATE_GAME_OVER = "GAME_OVER"
 # --- Bot Konfiguration ---
 PLAYER2_IS_BOT = False
 PLAYER2_IS_AI_AGENT = False  # Neue Option für RL-Agent
-
-# --- Partikel Klasse ---
-class Particle:
-    def __init__(self, pos, vel, color, lifetime, radius_range=(1, 3), gravity=0):
-        self.pos = pygame.Vector2(pos)
-        self.vel = pygame.Vector2(vel)
-        self.color = color
-        self.lifetime = lifetime
-        self.start_lifetime = lifetime
-        self.radius = random.uniform(radius_range[0], radius_range[1])
-        self.gravity = gravity
-
-    def update(self, dt):
-        self.vel.y += self.gravity * dt
-        self.pos += self.vel * dt
-        self.lifetime -= dt
-        if self.start_lifetime > 0:
-            self.radius = max(0, self.radius * (self.lifetime / self.start_lifetime))
-
-    def draw(self, surface):
-        if self.lifetime > 0 and self.radius >= 1:
-            alpha = max(0, min(255, int(255 * (self.lifetime / self.start_lifetime))))
-            try:
-                temp_surf = pygame.Surface((int(self.radius*2), int(self.radius*2)), pygame.SRCALPHA)
-                draw_color = (*self.color[:3], alpha)
-                pygame.draw.circle(temp_surf, draw_color, (int(self.radius), int(self.radius)), int(self.radius))
-                surface.blit(temp_surf, self.pos - pygame.Vector2(self.radius, self.radius))
-            except (ValueError, TypeError):
-                 pygame.draw.circle(surface, self.color, self.pos, int(self.radius))
-
-particles = []
-
-def emit_particles(count, pos, base_color, vel_range=(-50, 50), life_range=(0.2, 0.6), radius_range=(1, 3), gravity=0):
-    if len(particles) > MAX_PARTICLES - count:
-        return
-    for _ in range(count):
-        vel = pygame.Vector2(random.uniform(vel_range[0], vel_range[1]),
-                             random.uniform(vel_range[0], vel_range[1]))
-        r_offset = random.randint(-30, 30); g_offset = random.randint(-30, 30); b_offset = random.randint(-30, 30)
-        p_color = (max(0, min(255, base_color[0] + r_offset)),
-                   max(0, min(255, base_color[1] + g_offset)),
-                   max(0, min(255, base_color[2] + b_offset)))
-        lifetime = random.uniform(life_range[0], life_range[1])
-        particles.append(Particle(pos, vel, p_color, lifetime, radius_range, gravity))
-
-def update_and_draw_particles(dt, surface):
-    for i in range(len(particles) - 1, -1, -1):
-        p = particles[i]
-        p.update(dt)
-        if p.lifetime <= 0:
-            particles.pop(i)
-        else:
-            p.draw(surface)
 
 # --- Klassen (Player, Ball) ---
 class Player(pygame.sprite.Sprite):
@@ -145,61 +79,7 @@ class Player(pygame.sprite.Sprite):
 
     def set_avatar(self, color):
         self.color = color
-        surface_size = self.radius * 3.5 
-        self.original_image = pygame.Surface((surface_size, surface_size), pygame.SRCALPHA)
-        
-        center_x, center_y = surface_size / 2, surface_size / 2
-        wing_color = tuple(max(0, c - 40) for c in self.color[:3])
-
-        # --- Parameter für Flügelform (deine aktuellen Werte) ---
-        wing_base_width = self.radius * 3 
-        wing_length = self.radius * 1.3    
-        wing_tip_spread = self.radius * 1.0 
-
-        # --- Flügel zeichnen ---
-        p1_top = (center_x - self.radius * 0.4, center_y - wing_base_width / 2)
-        p2_top = (center_x - self.radius * 0.3 - wing_length, center_y - wing_tip_spread)
-        p3_top = (center_x + self.radius * 0.1, center_y - wing_base_width * 0.4)
-        pygame.draw.polygon(self.original_image, wing_color, [p1_top, p2_top, p3_top])
-
-        p1_bottom = (center_x - self.radius * 0.4, center_y + wing_base_width / 2)
-        p2_bottom = (center_x - self.radius * 0.3 - wing_length, center_y + wing_tip_spread)
-        p3_bottom = (center_x + self.radius * 0.1, center_y + wing_base_width * 0.4)
-        pygame.draw.polygon(self.original_image, wing_color, [p1_bottom, p2_bottom, p3_bottom])
-
-        # Körper zeichnen
-        pygame.draw.circle(self.original_image, self.color, (center_x, center_y), self.radius)
-        
-        # --- V-förmige Nase zeichnen (Pfeilspitze nach außen) ---
-        nose_color = (0, 0, 0) 
-        nose_thickness = 2     
-        
-        # Die Spitze des V (Pfeilspitze) ragt etwas über den Kreis hinaus
-        v_tip_extension = self.radius * 0.7 # Wie weit die Spitze des V vor dem Zentrum ist
-        
-        # Länge der "Arme" des V, die von der Spitze nach hinten gehen
-        v_arm_length = self.radius * 0.8 
-        # Spreizung der Arme am hinteren Ende (halber Abstand)
-        v_arm_spread_at_base = self.radius * 0.5
-
-        # Punkt der V-Spitze (auf der unrotierten Surface rechts vom Zentrum)
-        v_tip_point = (center_x + v_tip_extension, center_y)
-
-        # Endpunkt des oberen Arms des V (von der Spitze nach hinten-oben)
-        # Startet an v_tip_point und geht v_arm_length nach "hinten" (links) und v_arm_spread_at_base nach oben
-        # Also x = v_tip_point.x - v_arm_length (ca.), y = v_tip_point.y - v_arm_spread_at_base
-        # Genauer: Da die Spitze schon bei center_x + v_tip_extension ist,
-        # müssen wir von dort relativ zeichnen oder absolute Punkte definieren.
-        # Nehmen wir absolute Punkte:
-        # Die Basis der Arme ist näher am Zentrum.
-        base_x_offset = self.radius * 0.2 # Wie weit die Basis der Arme vom Zentrum nach vorne versetzt ist
-
-        end_point_top_arm = (center_x + base_x_offset, center_y - v_arm_spread_at_base)
-        end_point_bottom_arm = (center_x + base_x_offset, center_y + v_arm_spread_at_base)
-
-        pygame.draw.line(self.original_image, nose_color, v_tip_point, end_point_top_arm, nose_thickness)
-        pygame.draw.line(self.original_image, nose_color, v_tip_point, end_point_bottom_arm, nose_thickness)
-        
+        self.original_image = visuals.create_player_avatar(color, self.radius)
         self.image = self.original_image.copy()
         self.rect = self.image.get_rect()
         if hasattr(self, 'pos') and self.pos: self.rect.center = self.pos
@@ -223,7 +103,7 @@ class Player(pygame.sprite.Sprite):
             self.pos += self.velocity * dt
             if self.sprint_particle_timer <= 0:
                 particle_pos = self.pos - direction * self.radius # Partikel von hinten
-                emit_particles(2, particle_pos, (220, 220, 220), vel_range=(-40, 40), life_range=(0.2, 0.5), radius_range=(2, 4))
+                visuals.emit_particles(2, particle_pos, (220, 220, 220), vel_range=(-40, 40), life_range=(0.2, 0.5), radius_range=(2, 4))
                 self.sprint_particle_timer = 0.02
         else:
             self.rotate(dt)
@@ -266,9 +146,7 @@ class Ball(pygame.sprite.Sprite):
         self.update_appearance()
 
     def update_appearance(self):
-        self.original_image = pygame.Surface((self.radius * 2, self.radius * 2), pygame.SRCALPHA)
-        pygame.draw.circle(self.original_image, BALL_COLOR, (self.radius, self.radius), self.radius)
-        self.image = self.original_image
+        self.image = visuals.create_ball_image(self.radius)
         self.rect = self.image.get_rect()
         if hasattr(self, 'pos') and self.pos: self.rect.center = self.pos
 
@@ -277,9 +155,9 @@ class Ball(pygame.sprite.Sprite):
         if self.velocity.length() < 0.5: self.velocity = pygame.Vector2(0, 0)
 
     def update(self, dt, *args, **kwargs):
-        if self.velocity.length() > BALL_TRAIL_MIN_SPEED: # Nur Spur zeichnen wenn schnell
+        if self.velocity.length() > visuals.BALL_TRAIL_MIN_SPEED: # Nur Spur zeichnen wenn schnell
              self.trail_positions.append(self.pos.copy())
-             if len(self.trail_positions) > BALL_TRAIL_LENGTH:
+             if len(self.trail_positions) > visuals.BALL_TRAIL_LENGTH:
                  self.trail_positions.pop(0)
         elif self.trail_positions: # Langsam geworden, Spur leeren
             self.trail_positions.clear()
@@ -322,20 +200,8 @@ main_font = pygame.font.Font(None, 50)
 menu_font = pygame.font.Font(None, 60)
 small_font = pygame.font.Font(None, 35)
 
-spectator_positions_colors = []
-def generate_spectators():
-    spectator_positions_colors.clear()
-    top_tribune_rect = pygame.Rect(0, 0, SCREEN_WIDTH, TRIBUNE_HEIGHT)
-    for _ in range(NUM_SPECTATORS // 2):
-        pos = (random.randint(top_tribune_rect.left, top_tribune_rect.right),
-               random.randint(top_tribune_rect.top, top_tribune_rect.bottom))
-        color = random.choice(SPECTATOR_COLORS); spectator_positions_colors.append((pos, color))
-    bottom_tribune_rect = pygame.Rect(0, SCREEN_HEIGHT - TRIBUNE_HEIGHT, SCREEN_WIDTH, TRIBUNE_HEIGHT)
-    for _ in range(NUM_SPECTATORS // 2):
-        pos = (random.randint(bottom_tribune_rect.left, bottom_tribune_rect.right),
-               random.randint(bottom_tribune_rect.top, bottom_tribune_rect.bottom))
-        color = random.choice(SPECTATOR_COLORS); spectator_positions_colors.append((pos, color))
-generate_spectators()
+# Spectators generieren
+visuals.generate_spectators(SCREEN_WIDTH, SCREEN_HEIGHT, TRIBUNE_HEIGHT, NUM_SPECTATORS)
 
 field_center_y = TRIBUNE_HEIGHT + (SCREEN_HEIGHT - 2 * TRIBUNE_HEIGHT) / 2
 player1 = Player(SCREEN_WIDTH * 0.25, field_center_y, DEFAULT_P1_COLOR, pygame.K_a, 0)
@@ -347,27 +213,6 @@ players = pygame.sprite.Group(player1, player2)
 score1 = 0; score2 = 0
 game_state = STATE_MENU
 start_time = 0; remaining_time = GAME_DURATION; last_goal_time = 0
-
-
-def draw_tribunes_and_spectators():
-    pygame.draw.rect(screen, TRIBUNE_COLOR, (0, 0, SCREEN_WIDTH, TRIBUNE_HEIGHT))
-    pygame.draw.rect(screen, TRIBUNE_COLOR, (0, SCREEN_HEIGHT - TRIBUNE_HEIGHT, SCREEN_WIDTH, TRIBUNE_HEIGHT))
-    for pos, color in spectator_positions_colors: pygame.draw.circle(screen, color, pos, SPECTATOR_RADIUS)
-
-def draw_field():
-    field_rect = pygame.Rect(0, TRIBUNE_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT - 2 * TRIBUNE_HEIGHT)
-    pygame.draw.rect(screen, FIELD_COLOR, field_rect)
-    field_top = TRIBUNE_HEIGHT; field_bottom = SCREEN_HEIGHT - TRIBUNE_HEIGHT; field_height = field_bottom - field_top
-    field_center_x = SCREEN_WIDTH / 2; field_center_y = field_top + field_height / 2
-    pygame.draw.line(screen, LINE_COLOR, (field_center_x, field_top), (field_center_x, field_bottom), 2)
-    pygame.draw.circle(screen, LINE_COLOR, (field_center_x, field_center_y), 70, 2)
-    goal_y_abs_start = field_top + (field_height / 2 - GOAL_HEIGHT / 2)
-    goal_y_abs_end = field_top + (field_height / 2 + GOAL_HEIGHT / 2)
-    pygame.draw.line(screen, LINE_COLOR, (GOAL_WIDTH, goal_y_abs_start), (GOAL_WIDTH, goal_y_abs_end), 5)
-    pygame.draw.line(screen, LINE_COLOR, (SCREEN_WIDTH - GOAL_WIDTH, goal_y_abs_start), (SCREEN_WIDTH - GOAL_WIDTH, goal_y_abs_end), 5)
-
-def draw_text(text, font, x, y, color=TEXT_COLOR):
-    text_surface = font.render(text, True, color); text_rect = text_surface.get_rect(center=(x, y)); screen.blit(text_surface, text_rect)
 
 def reset_positions():
     player1.update_radius()
@@ -383,7 +228,7 @@ def reset_positions():
     player1.reset(player1_start_x, field_center_y, 0, p1_color)
     player2.reset(player2_start_x, field_center_y, 180, p2_color)
     ball.reset()
-    particles.clear()
+    visuals.clear_particles()
 
 def start_new_game():
     global score1, score2, start_time, remaining_time, last_goal_time, game_state
@@ -393,23 +238,6 @@ def start_new_game():
         bot_logic.reset_bot_state()
     # Sicherstellen, dass nach Spielstart der Zustand auf PLAYING ist
     game_state = STATE_PLAYING
-
-
-def draw_ball_trail(surface, trail, current_ball_radius):
-    num_points = len(trail)
-    if num_points < 2: return
-    for i in range(num_points):
-        pos = trail[i]
-        alpha = max(0, int(150 * (i / num_points)))
-        radius = max(1, int(current_ball_radius * 0.8 * (i / num_points)))
-        if radius >= 1:
-            try:
-                temp_surf = pygame.Surface((radius*2, radius*2), pygame.SRCALPHA)
-                draw_color = (*BALL_COLOR[:3], alpha)
-                pygame.draw.circle(temp_surf, draw_color, (radius, radius), radius)
-                surface.blit(temp_surf, pos - pygame.Vector2(radius, radius))
-            except (ValueError, TypeError): pass
-
 
 running = True
 while running:
@@ -445,9 +273,6 @@ while running:
                 if event.key == player1.control_key: player1.stop_sprint()
                 if not PLAYER2_IS_BOT and event.key == player2.control_key: player2.stop_sprint()
 
-    # Partikel Update hierhin verschoben, damit sie immer aktualisiert werden
-    # update_and_draw_particles(dt, screen) # Zeichnen erfolgt weiter unten
-
     if game_state == STATE_PLAYING:
         if PLAYER2_IS_BOT:
              target_goal_x = SCREEN_WIDTH - GOAL_WIDTH
@@ -471,7 +296,7 @@ while running:
             if player.is_sprinting:
                 kick_speed = player.sprint_speed * BALL_KICK_MULTIPLIER
                 ball.velocity = collision_normal * kick_speed
-                emit_particles(8, ball.pos, (255, 255, 100), vel_range=(-80, 80), life_range=(0.1, 0.4), radius_range=(1, 3))
+                visuals.emit_particles(8, ball.pos, (255, 255, 100), vel_range=(-80, 80), life_range=(0.1, 0.4), radius_range=(1, 3))
             else: # Sanfter Stoß, wenn nicht gesprintet wird
                 # Spieler wird leicht zurückgestoßen, Ball bekommt einen kleinen Impuls
                 player_repel_strength = 20 
@@ -535,9 +360,9 @@ while running:
                 if random.random() < 0.6 and goal_scorer_color: # 60% Chance für Tor-Farbe
                     base_conf_color = goal_scorer_color
                 else:
-                    base_conf_color = random.choice(SPECTATOR_COLORS)
+                    base_conf_color = random.choice(visuals.SPECTATOR_COLORS)
 
-                emit_particles(1, (pos_x, pos_y), base_conf_color,
+                visuals.emit_particles(1, (pos_x, pos_y), base_conf_color,
                                vel_range=(-60, 60), life_range=(1.5, 3.0), # Längere Lebensdauer, mehr Streuung
                                radius_range=(4, 8), gravity=70) # Größere Partikel, stärkere Gravitation
 
@@ -556,46 +381,41 @@ while running:
 
 
     screen.fill((0,0,0))
-    draw_tribunes_and_spectators()
+    visuals.draw_tribunes_and_spectators(screen, SCREEN_WIDTH, SCREEN_HEIGHT, TRIBUNE_HEIGHT)
 
     if game_state == STATE_MENU:
-        draw_text("Wähle den Modus:", menu_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 100)
-        draw_text("1 : Spieler vs Spieler", main_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
-        draw_text("2 : Spieler vs Bot", main_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 100)
-        draw_text("ESC: Quit | R: Menu", small_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT - 50)
+        visuals.draw_text(screen, "Wähle den Modus:", menu_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 100)
+        visuals.draw_text(screen, "1 : Spieler vs Spieler", main_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+        visuals.draw_text(screen, "2 : Spieler vs Bot", main_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 100)
+        visuals.draw_text(screen, "ESC: Quit | R: Menu", small_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT - 50)
 
     elif game_state in [STATE_PLAYING, STATE_GOAL_PAUSE, STATE_GAME_OVER]:
-        draw_field()
-        if ball.velocity.length() > BALL_TRAIL_MIN_SPEED or len(ball.trail_positions) > 0 : # Trail nur wenn nötig
-            draw_ball_trail(screen, ball.trail_positions, BALL_RADIUS)
+        visuals.draw_field(screen, SCREEN_WIDTH, SCREEN_HEIGHT, TRIBUNE_HEIGHT, GOAL_WIDTH, GOAL_HEIGHT)
+        if ball.velocity.length() > visuals.BALL_TRAIL_MIN_SPEED or len(ball.trail_positions) > 0 : # Trail nur wenn nötig
+            visuals.draw_ball_trail(screen, ball.trail_positions, BALL_RADIUS)
         
         all_sprites.draw(screen) # Zeichnet Spieler und Ball
 
         score_text = f"P1: {score1} - P2: {score2}"
-        draw_text(score_text, main_font, SCREEN_WIDTH / 2, TRIBUNE_HEIGHT / 2, TEXT_COLOR)
+        visuals.draw_text(screen, score_text, main_font, SCREEN_WIDTH / 2, TRIBUNE_HEIGHT / 2)
         minutes = int(remaining_time // 60); seconds = int(remaining_time % 60)
         timer_text = f"{minutes:02}:{seconds:02}"
-        draw_text(timer_text, main_font, SCREEN_WIDTH - 100, TRIBUNE_HEIGHT / 2, TEXT_COLOR)
+        visuals.draw_text(screen, timer_text, main_font, SCREEN_WIDTH - 100, TRIBUNE_HEIGHT / 2)
 
         if game_state == STATE_GOAL_PAUSE:
-             draw_text("GOAL!", menu_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, TEXT_COLOR)
+             visuals.draw_text(screen, "GOAL!", menu_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
         elif game_state == STATE_GAME_OVER:
              winner_text = ""
              if score1 > score2: winner_text = f"Player 1 wins!"
              elif score2 > score1: winner_text = f"Player 2 wins!"
              else: winner_text = "Draw!"
-             draw_text("Game Over", menu_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 60, TEXT_COLOR)
-             draw_text(winner_text, main_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 10, TEXT_COLOR)
-             draw_text("Press R for Main Menu", small_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 40, TEXT_COLOR)
-             draw_text("Press ESC to Quit", small_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 70, TEXT_COLOR)
+             visuals.draw_text(screen, "Game Over", menu_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 60)
+             visuals.draw_text(screen, winner_text, main_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 10)
+             visuals.draw_text(screen, "Press R for Main Menu", small_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 40)
+             visuals.draw_text(screen, "Press ESC to Quit", small_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 70)
     
     # Partikel immer zuletzt zeichnen, damit sie über allem liegen
-    update_and_draw_particles(dt, screen)
-
-
-    # Debugging-Ausgabe (optional, kann entfernt werden)
-    #ball_speed = ball.velocity.length()
-    #print(f"P1: ({int(player1.pos.x)}, {int(player1.pos.y)}) Angle: {int(player1.angle)} | P2: ({int(player2.pos.x)}, {int(player2.pos.y)}) Angle: {int(player2.angle)} || Ball: ({int(ball.pos.x)}, {int(ball.pos.y)}) Speed: {ball_speed:.1f} State: {game_state}")
+    visuals.update_and_draw_particles(dt, screen)
 
     pygame.display.flip()
 
