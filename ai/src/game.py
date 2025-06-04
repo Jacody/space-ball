@@ -57,6 +57,13 @@ PLAYER1_IS_BOT = False
 PLAYER2_IS_BOT = False
 PLAYER2_IS_AI_AGENT = False  # Neue Option für RL-Agent
 
+# --- Reward-System ---
+current_reward = 0
+total_reward = 0
+previous_ball_x = 0
+player1_touched_ball = False
+last_direction_reward_time = 0  # Timer für 3-Sekunden-Cooldown
+
 # --- Klassen (Player, Ball) ---
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y, start_color, control_key, start_angle):
@@ -232,9 +239,72 @@ def reset_positions():
     ball.reset()
     visuals.clear_particles()
 
+def calculate_ball_direction_reward():
+    """Berechnet Reward basierend auf Ball-Richtung zum gegnerischen Tor (rechts für player left)"""
+    global previous_ball_x, player1_touched_ball, last_direction_reward_time
+    
+    current_time = time.time()
+    
+    # Ball bewegt sich nach rechts (Richtung gegnerisches Tor für player left)
+    ball_moving_right = ball.pos.x > previous_ball_x
+    previous_ball_x = ball.pos.x
+    
+    # Nur Reward geben wenn player1 den Ball berührt hat, Ball sich nach rechts bewegt 
+    # UND mindestens 3 Sekunden seit dem letzten Reward vergangen sind
+    if (player1_touched_ball and ball_moving_right and ball.velocity.length() > 0 
+        and current_time - last_direction_reward_time >= 3.0):
+        player1_touched_ball = False  # Reset nach Reward
+        last_direction_reward_time = current_time  # Timer zurücksetzen
+        return 1
+    
+    # Reset wenn Ball sich nicht nach rechts bewegt
+    if not ball_moving_right:
+        player1_touched_ball = False
+        
+    return 0
+
+def handle_ball_collision():
+    """Behandelt Ball-Spieler-Kollisionen und setzt player1_touched_ball Flag"""
+    global player1_touched_ball
+    
+    collided_players = pygame.sprite.spritecollide(ball, players, False, pygame.sprite.collide_circle)
+    for player in collided_players:
+        # Verfolge wenn player1 den Ball berührt
+        if player == player1:
+            player1_touched_ball = True
+            
+        distance_vec = ball.pos - player.pos; distance = distance_vec.length()
+        if distance == 0: collision_normal = pygame.Vector2(1, 0)
+        else: collision_normal = distance_vec.normalize()
+
+        if player.is_sprinting:
+            kick_speed = player.sprint_speed * BALL_KICK_MULTIPLIER
+            ball.velocity = collision_normal * kick_speed
+            visuals.emit_particles(8, ball.pos, (255, 255, 100), vel_range=(-80, 80), life_range=(0.1, 0.4), radius_range=(1, 3))
+        else: # Sanfter Stoß, wenn nicht gesprintet wird
+            # Spieler wird leicht zurückgestoßen, Ball bekommt einen kleinen Impuls
+            player_repel_strength = 20 
+            ball_push_strength = 50
+            
+            # Spieler zurückstoßen
+            # player.pos -= collision_normal * player_repel_strength * dt # Zu stark, wenn dt groß
+            
+            # Ball stoßen
+            ball.velocity += collision_normal * ball_push_strength
+        
+        # Kollisionsauflösung (Overlap entfernen)
+        overlap = (player.radius + ball.radius) - distance
+        if overlap > 0.1: # Kleiner Puffer, um Jitter zu vermeiden
+             correction_vec = collision_normal * overlap
+             ball.pos += correction_vec * 0.51 # Ball etwas mehr bewegen
+             player.pos -= correction_vec * 0.5 # Spieler etwas weniger
+             ball.rect.center = ball.pos
+             player.rect.center = player.pos
+
 def start_new_game():
-    global score1, score2, start_time, remaining_time, last_goal_time, game_state
+    global score1, score2, start_time, remaining_time, last_goal_time, game_state, current_reward, total_reward, previous_ball_x, player1_touched_ball, last_direction_reward_time
     score1 = 0; score2 = 0; start_time = time.time(); remaining_time = GAME_DURATION; last_goal_time = 0
+    current_reward = 0; total_reward = 0; previous_ball_x = SCREEN_WIDTH / 2; player1_touched_ball = False; last_direction_reward_time = 0
     reset_positions()
     if PLAYER1_IS_BOT:
         bot_left.reset_bot_state()
@@ -284,7 +354,12 @@ while running:
                 if event.key == player1.control_key and not PLAYER1_IS_BOT: player1.stop_sprint()
                 if not PLAYER2_IS_BOT and event.key == player2.control_key: player2.stop_sprint()
 
-    if game_state == STATE_PLAYING:
+    if game_state == STATE_PLAYING:        
+        # Reward für Ball-Richtung berechnen
+        direction_reward = calculate_ball_direction_reward()
+        current_reward = direction_reward
+        total_reward += current_reward
+        
         # Terminal-Ausgabe der Spielwerte
         ball_speed = ball.velocity.length()
         ball_direction = 0
@@ -297,6 +372,13 @@ while running:
         print(f"Speed Ball: {ball_speed:.1f}")
         print(f"Direction Ball: {ball_direction:.1f}°")
         print(f"Position Player Right: ({player2.pos.x:.1f}, {player2.pos.y:.1f})")
+        print(f"Current Reward: {current_reward}")
+        print(f"Total Reward: {total_reward}")
+        
+        # Cooldown-Information für Richtungs-Reward
+        current_time = time.time()
+        cooldown_remaining = max(0, 3.0 - (current_time - last_direction_reward_time))
+        print(f"Direction Reward Cooldown: {cooldown_remaining:.1f}s")
         print("-" * 50)
         
         # Bot-Logik für Player1 (bot_left)
@@ -325,36 +407,7 @@ while running:
 
         all_sprites.update(dt, keys)
 
-        collided_players = pygame.sprite.spritecollide(ball, players, False, pygame.sprite.collide_circle)
-        for player in collided_players:
-            distance_vec = ball.pos - player.pos; distance = distance_vec.length()
-            if distance == 0: collision_normal = pygame.Vector2(1, 0)
-            else: collision_normal = distance_vec.normalize()
-
-            if player.is_sprinting:
-                kick_speed = player.sprint_speed * BALL_KICK_MULTIPLIER
-                ball.velocity = collision_normal * kick_speed
-                visuals.emit_particles(8, ball.pos, (255, 255, 100), vel_range=(-80, 80), life_range=(0.1, 0.4), radius_range=(1, 3))
-            else: # Sanfter Stoß, wenn nicht gesprintet wird
-                # Spieler wird leicht zurückgestoßen, Ball bekommt einen kleinen Impuls
-                player_repel_strength = 20 
-                ball_push_strength = 50
-                
-                # Spieler zurückstoßen
-                # player.pos -= collision_normal * player_repel_strength * dt # Zu stark, wenn dt groß
-                
-                # Ball stoßen
-                ball.velocity += collision_normal * ball_push_strength
-            
-            # Kollisionsauflösung (Overlap entfernen)
-            overlap = (player.radius + ball.radius) - distance
-            if overlap > 0.1: # Kleiner Puffer, um Jitter zu vermeiden
-                 correction_vec = collision_normal * overlap
-                 ball.pos += correction_vec * 0.51 # Ball etwas mehr bewegen
-                 player.pos -= correction_vec * 0.5 # Spieler etwas weniger
-                 ball.rect.center = ball.pos
-                 player.rect.center = player.pos
-
+        handle_ball_collision()
 
         # Spieler-Spieler-Kollision
         if pygame.sprite.collide_circle(player1, player2): # Nutze die eingebaute circle collision
@@ -381,9 +434,17 @@ while running:
         if ball.rect.right < GOAL_WIDTH and goal_y_abs_start < ball.pos.y < goal_y_abs_end:
             score2 += 1; goal_scored = True; print("Goal for Blue!")
             goal_scorer_color = player2.color
+            # Gegentor für player left = -100 Reward
+            current_reward = -100
+            total_reward += current_reward
+            print(f"GEGENTOR! Reward: {current_reward}, Total Reward: {total_reward}")
         elif ball.rect.left > SCREEN_WIDTH - GOAL_WIDTH and goal_y_abs_start < ball.pos.y < goal_y_abs_end:
             score1 += 1; goal_scored = True; print("Goal for Red!")
             goal_scorer_color = player1.color
+            # Tor für player left = +100 Reward
+            current_reward = 100
+            total_reward += current_reward
+            print(f"TOR! Reward: {current_reward}, Total Reward: {total_reward}")
 
         if goal_scored:
             game_state = STATE_GOAL_PAUSE; last_goal_time = time.time()
