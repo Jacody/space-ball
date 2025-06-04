@@ -4,6 +4,8 @@ import sys
 import time
 import random
 import os
+import csv
+from datetime import datetime
 
 # Pfad zum Hauptverzeichnis hinzufügen
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -321,6 +323,41 @@ def handle_ball_collision():
              ball.rect.center = ball.pos
              player.rect.center = player.pos
 
+def save_score_to_csv(round_num, score_p1, score_p2, total_reward_value):
+    """Speichert das Spielergebnis in eine CSV-Datei"""
+    csv_filename = "game_results.csv"
+    
+    # Prüfen ob Datei existiert, um Header hinzuzufügen
+    file_exists = os.path.exists(csv_filename)
+    
+    with open(csv_filename, 'a', newline='', encoding='utf-8') as csvfile:
+        fieldnames = ['Runde', 'Datum_Zeit', 'Score_Bot_Left', 'Score_Bot_Right', 'Gewinner', 'Total_Reward']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        
+        # Header nur schreiben wenn Datei neu ist
+        if not file_exists:
+            writer.writeheader()
+        
+        # Gewinner bestimmen
+        if score_p1 > score_p2:
+            winner = "Bot_Left"
+        elif score_p2 > score_p1:
+            winner = "Bot_Right"
+        else:
+            winner = "Unentschieden"
+        
+        # Zeile hinzufügen
+        writer.writerow({
+            'Runde': round_num,
+            'Datum_Zeit': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            'Score_Bot_Left': score_p1,
+            'Score_Bot_Right': score_p2,
+            'Gewinner': winner,
+            'Total_Reward': total_reward_value
+        })
+    
+    print(f"Score wurde in {csv_filename} gespeichert: Runde {round_num}, {score_p1}:{score_p2}, Reward: {total_reward_value}")
+
 def start_new_game():
     global score1, score2, start_time, remaining_time, last_goal_time, game_state, current_reward, total_reward, previous_ball_x, player2_touched_ball, last_direction_reward_time, round_number
     
@@ -478,6 +515,9 @@ while running:
                 game_state = STATE_GAME_OVER
                 game_over_start_time = time.time()
                 player1.stop_sprint(); player2.stop_sprint()
+                
+                # Score in CSV speichern
+                save_score_to_csv(round_number, score1, score2, total_reward)
                 
                 # Ergebnis der Runde ausgeben
                 print(f"\n{'='*60}")
