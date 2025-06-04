@@ -53,16 +53,21 @@ STATE_GOAL_PAUSE = "GOAL_PAUSE"
 STATE_GAME_OVER = "GAME_OVER"
 
 # --- Bot Konfiguration ---
-PLAYER1_IS_BOT = False
-PLAYER2_IS_BOT = False
+PLAYER1_IS_BOT = True
+PLAYER2_IS_BOT = True
 PLAYER2_IS_AI_AGENT = False  # Neue Option für RL-Agent
 
 # --- Reward-System ---
 current_reward = 0
 total_reward = 0
-previous_ball_x = 0
-player2_touched_ball = False  # Jetzt für player2 (rechter Spieler)
-last_direction_reward_time = 0  # Timer für 3-Sekunden-Cooldown
+previous_ball_x = SCREEN_WIDTH / 2
+player2_touched_ball = False
+last_direction_reward_time = 0
+
+# --- Dauerschleife-System ---
+round_number = 1
+auto_restart_delay = 3.0  # Sekunden bis zum automatischen Neustart
+game_over_start_time = 0
 
 # --- Klassen (Player, Ball) ---
 class Player(pygame.sprite.Sprite):
@@ -220,8 +225,23 @@ all_sprites = pygame.sprite.Group(player1, player2, ball)
 players = pygame.sprite.Group(player1, player2)
 
 score1 = 0; score2 = 0
-game_state = STATE_MENU
-start_time = 0; remaining_time = GAME_DURATION; last_goal_time = 0
+game_state = STATE_PLAYING  # Direkt im Spielmodus starten
+start_time = time.time()  # Timer direkt starten
+remaining_time = GAME_DURATION
+last_goal_time = 0
+
+# Initialisiere Reward-System
+current_reward = 0
+total_reward = 0
+previous_ball_x = SCREEN_WIDTH / 2
+player2_touched_ball = False
+last_direction_reward_time = 0
+
+# Bot-States initialisieren
+bot_left.reset_bot_state()
+bot_right.reset_bot_state()
+
+pygame.display.set_caption("Soccer - Bot vs Bot")
 
 def reset_positions():
     player1.update_radius()
@@ -302,7 +322,12 @@ def handle_ball_collision():
              player.rect.center = player.pos
 
 def start_new_game():
-    global score1, score2, start_time, remaining_time, last_goal_time, game_state, current_reward, total_reward, previous_ball_x, player2_touched_ball, last_direction_reward_time
+    global score1, score2, start_time, remaining_time, last_goal_time, game_state, current_reward, total_reward, previous_ball_x, player2_touched_ball, last_direction_reward_time, round_number
+    
+    print(f"\n{'='*60}")
+    print(f"RUNDE {round_number} STARTET!")
+    print(f"{'='*60}\n")
+    
     score1 = 0; score2 = 0; start_time = time.time(); remaining_time = GAME_DURATION; last_goal_time = 0
     current_reward = 0; total_reward = 0; previous_ball_x = SCREEN_WIDTH / 2; player2_touched_ball = False; last_direction_reward_time = 0
     reset_positions()
@@ -313,6 +338,9 @@ def start_new_game():
     # Sicherstellen, dass nach Spielstart der Zustand auf PLAYING ist
     game_state = STATE_PLAYING
 
+# Jetzt das Spielfeld initialisieren
+reset_positions()
+
 running = True
 while running:
     dt = clock.tick(FPS) / 1000.0
@@ -322,30 +350,7 @@ while running:
         if event.type == pygame.QUIT: running = False
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE: running = False
-            if event.key == pygame.K_r:
-                game_state = STATE_MENU
-                pygame.display.set_caption("Simple Soccer Game - Select Mode")
-
-            if game_state == STATE_MENU:
-                if event.key == pygame.K_1: 
-                    PLAYER1_IS_BOT = False
-                    PLAYER2_IS_BOT = False; 
-                    start_new_game(); 
-                    # game_state = STATE_PLAYING # Wird in start_new_game gesetzt
-                    pygame.display.set_caption("Soccer - PvP")
-                elif event.key == pygame.K_2: 
-                    PLAYER1_IS_BOT = False
-                    PLAYER2_IS_BOT = True; 
-                    start_new_game(); 
-                    # game_state = STATE_PLAYING # Wird in start_new_game gesetzt
-                    pygame.display.set_caption("Soccer - PvE")
-                elif event.key == pygame.K_3:
-                    PLAYER1_IS_BOT = True
-                    PLAYER2_IS_BOT = True
-                    start_new_game()
-                    pygame.display.set_caption("Soccer - Bot vs Bot")
-
-            elif game_state == STATE_PLAYING:
+            if game_state == STATE_PLAYING:
                 if event.key == player1.control_key and not PLAYER1_IS_BOT: player1.start_sprint()
                 if not PLAYER2_IS_BOT and event.key == player2.control_key: player2.start_sprint()
 
@@ -366,6 +371,7 @@ while running:
         if ball_speed > 0:
             ball_direction = math.degrees(math.atan2(ball.velocity.y, ball.velocity.x))
         
+        print(f"RUNDE {round_number} | Zeit: {int(remaining_time//60):02}:{int(remaining_time%60):02} | Score: {score1}:{score2}")
         print(f"Position Player Left: ({player1.pos.x:.1f}, {player1.pos.y:.1f})")
         print(f"Direction Player Left: {player1.angle:.1f}°")
         print(f"Position Ball: ({ball.pos.x:.1f}, {ball.pos.y:.1f})")
@@ -470,26 +476,38 @@ while running:
             remaining_time = max(0, GAME_DURATION - elapsed_time)
             if remaining_time == 0:
                 game_state = STATE_GAME_OVER
+                game_over_start_time = time.time()
                 player1.stop_sprint(); player2.stop_sprint()
+                
+                # Ergebnis der Runde ausgeben
+                print(f"\n{'='*60}")
+                print(f"RUNDE {round_number} BEENDET!")
+                if score1 > score2:
+                    print(f"GEWINNER: Bot Left (Rot) - {score1}:{score2}")
+                elif score2 > score1:
+                    print(f"GEWINNER: Bot Right (Rosa) - {score2}:{score1}")
+                else:
+                    print(f"UNENTSCHIEDEN - {score1}:{score2}")
+                print(f"Nächste Runde startet in {auto_restart_delay} Sekunden...")
+                print(f"{'='*60}\n")
 
     elif game_state == STATE_GOAL_PAUSE:
         if time.time() - last_goal_time > RESET_DELAY:
             reset_positions()
             game_state = STATE_PLAYING
             start_time = time.time() - (GAME_DURATION - remaining_time) # Timer korrekt fortsetzen
-
+    
+    elif game_state == STATE_GAME_OVER:
+        # Automatischer Neustart nach Verzögerung
+        if time.time() - game_over_start_time > auto_restart_delay:
+            round_number += 1
+            start_new_game()
 
     screen.fill((0,0,0))
     visuals.draw_tribunes_and_spectators(screen, SCREEN_WIDTH, SCREEN_HEIGHT, TRIBUNE_HEIGHT)
 
-    if game_state == STATE_MENU:
-        visuals.draw_text(screen, "Wähle den Modus:", menu_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 100)
-        visuals.draw_text(screen, "1 : Spieler vs Spieler", main_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
-        visuals.draw_text(screen, "2 : Spieler vs Bot", main_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 100)
-        visuals.draw_text(screen, "3 : Bot vs Bot", main_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 200)
-        visuals.draw_text(screen, "ESC: Quit | R: Menu", small_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT - 50)
-
-    elif game_state in [STATE_PLAYING, STATE_GOAL_PAUSE, STATE_GAME_OVER]:
+    # Menu entfernt - automatischer Dauerlauf
+    if game_state in [STATE_PLAYING, STATE_GOAL_PAUSE, STATE_GAME_OVER]:
         visuals.draw_field(screen, SCREEN_WIDTH, SCREEN_HEIGHT, TRIBUNE_HEIGHT, GOAL_WIDTH, GOAL_HEIGHT)
         if ball.velocity.length() > visuals.BALL_TRAIL_MIN_SPEED or len(ball.trail_positions) > 0 : # Trail nur wenn nötig
             visuals.draw_ball_trail(screen, ball.trail_positions, BALL_RADIUS)
@@ -507,21 +525,17 @@ while running:
         elif game_state == STATE_GAME_OVER:
              winner_text = ""
              if score1 > score2: 
-                 if PLAYER1_IS_BOT and PLAYER2_IS_BOT:
-                     winner_text = f"Bot Left gewinnt!"
-                 else:
-                     winner_text = f"Player 1 wins!"
+                 winner_text = f"Bot Left gewinnt!"
              elif score2 > score1: 
-                 if PLAYER1_IS_BOT and PLAYER2_IS_BOT:
-                     winner_text = f"Bot Right gewinnt!"
-                 else:
-                     winner_text = f"Player 2 wins!"
+                 winner_text = f"Bot Right gewinnt!"
              else: 
                  winner_text = "Unentschieden!"
-             visuals.draw_text(screen, "Game Over", menu_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 60)
+             
+             countdown = max(0, auto_restart_delay - (time.time() - game_over_start_time))
+             visuals.draw_text(screen, f"Runde {round_number} beendet", menu_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 60)
              visuals.draw_text(screen, winner_text, main_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 10)
-             visuals.draw_text(screen, "Press R for Main Menu", small_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 40)
-             visuals.draw_text(screen, "Press ESC to Quit", small_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 70)
+             visuals.draw_text(screen, f"Nächste Runde in {countdown:.1f}s", small_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 40)
+             visuals.draw_text(screen, "ESC: Quit", small_font, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 70)
     
     # Partikel immer zuletzt zeichnen, damit sie über allem liegen
     visuals.update_and_draw_particles(dt, screen)
